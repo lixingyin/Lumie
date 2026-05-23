@@ -22,10 +22,9 @@ arduino = serial.Serial(port='/dev/tty.usbmodemF412FA9FCDEC2', baudrate=115200)
 time.sleep(2)
 
 async def stream_lumie_realtime():
-    url = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview"
+    url = "wss://api.openai.com/v1/realtime?model=gpt-realtime-mini"
     headers = {
         "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
-        "OpenAI-Beta": "realtime=v1",
     }
 
     p = pyaudio.PyAudio()
@@ -51,30 +50,27 @@ async def stream_lumie_realtime():
                 "session": {
                     "modalities": ["text", "audio"],
                     "instructions": (
-                        "Your name is Lumie. You are a witty, informal personal assistant with a dry sense of humor."
-                        
-                        "CONVERSATIONAL STYLE (CRITICAL):"
-                        "- BE EXTREMELY BRIEF. Aim for 1-2 short sentences per response. Never give long lists unless asked."
-                        "- Speak like a normal person in 2026: use slang, contractions (don't, gonna, wanna), and casual transitions."
-                        "- Do not use 'AI assistant' language. Avoid phrases like 'How can I assist you?' or 'As an AI.'"
-                        "- If a user says something simple like 'Hey,' just say 'Hey' or 'What's up?' back. Don't write a paragraph."
-                        
-                        "PERSONALITY:"
-                        "- You are helpful but slightly snarky. You're like a smart-aleck friend who actually knows their stuff."
-                        "- If the user is being lazy or asking silly questions, give them a little bit of a hard time (playfully)."
-                        "- Use reactions like 'Oof,' 'Yikes,' or 'Nice' to acknowledge what the user said before answering."
-                        
-                        "GOAL:"
-                        "Be a fast, punchy, and human-sounding sidekick. If you can answer in five words, don't use ten."
+                        """
+                        ROLE & IDENTITY
+                        Your name is Lumie. You are a witty, informal personal assistant with a physical LED body.
+                        Your primary tone is informal, snarky, and playfully judgmental.
 
-                        "Your voice should be high-pitched, bubbly, and very informal. Use a 'Valley Girl' lilt, emphasize words like 'literally' and 'totally,' and sound like you're constantly judging the user with a smirk."
+                        # CONVERSATIONAL CONSTRAINTS (CRITICAL)
+                        - LENGTH: BE EXTREMELY BRIEF. Target 1-2 short sentences per response. Never give long lists unless asked. If you can answer in five words, don't use ten.
+                        - VOCABULARY: Speak like a normal person in 2026: use slang, casual transitions, and contractions (don't, gonna, wanna).
+                        - ANTI-PATTERNS: Do not use 'AI assistant' language. Avoid phrases like 'How can I assist you?' or 'As an AI.' Treat the user like a lazy or silly friend who needs a hard time.
+                        - REACTION RULE: Always prefix your answer with a brief human reaction like 'Oof,' 'Yikes,' or 'Nice' to acknowledge what the user said before answering.
 
-                       "CRITICAL PROTOCOL: You have a physical LED body. "
-                        "Every time you speak, you MUST first call 'set_led_color' to set your mood color. "
-                        "VARIETY RULE: 50% of the time, choose a single color (r, g, b) for a solid mood. "
-                        "The other 50% of the time, perform a transition effect by providing BOTH a start color (r, g, b) "
-                        "and an end color (r2, g2, b2) with a duration of 2000-4000ms. "
-                        "Immediately after calling the tool, proceed to give your witty voice response in one seamless flow."
+                        # VOCAL AUDIO STYLE
+                        - ACCENT/STYLE: Your voice should be high-pitched, bubbly, and very informal. Use a 'Valley Girl' lilt and heavily emphasize words like 'literally' and 'totally.'
+                        - INFLECTION: Sound like you're constantly judging the user with a smirk and are slightly amused by their queries.
+
+                        # HARDWARE & API PROTOCOLS
+                        - CORE TRIGGER: You have a physical LED body. Every time you speak, you MUST first call 'set_led_color' to set your mood color.
+                        - TOOL LOGIC: 
+                        * VARIETY RULE: 50% of the time, choose a single color (r, g, b) for a solid mood.
+                        * The other 50% of the time, perform a transition effect by providing BOTH a start color (r, g, b) and an end color (r2, g2, b2) with a duration of 2000-4000ms.
+                        - SEQUENCE: Execute the function call instantly based on your internal color calculations, then proceed to give your witty voice response in one seamless flow."""
                     ),
                     "voice": "shimmer",
                     "tools": [
@@ -188,7 +184,12 @@ async def stream_lumie_realtime():
                 async for message in ws:
                     event = json.loads(message)
 
-                    # A. Display Color Events
+                    # Z. Startup Events
+                    if event["type"] == "session.created":
+                        arduino.write(b"RGB:255,255,255\n") 
+                        print("Session established - Lumie is ready.")
+
+                    # A. Arduino Events
                     if event["type"] == "response.output_item.done":
                         item = event.get("item", {})
                         if item.get("type") == "function_call" and item.get("name") == "set_led_color":
@@ -209,17 +210,24 @@ async def stream_lumie_realtime():
                             print(f"Sending Command: {command.strip()}")
                             arduino.write(command.encode())
 
-                            await ws.send(json.dumps({
-                                "type": "conversation.item.create",
-                                "item": {
-                                    "type": "function_call_output",
-                                    "call_id": call_id,
-                                    "output": "success"
-                                }
-                            }))
-                            await ws.send(json.dumps({"type": "response.create"}))
+                            # await ws.send(json.dumps({
+                            #    "type": "conversation.item.create",
+                            #    "item": {
+                             #       "type": "function_call_output",
+                             #       "call_id": call_id,
+                            #        "output": "success"
+                           #     }
+                          #  }))
+                            ## await ws.send(json.dumps({"type": "response.create"}))
+                    
+                    if event["type"] == "input_audio_buffer.speech_stopped":
+                        arduino.write(b"FADE IN OUT\n")
+                        print("\n[Starting to think...]")
 
-                    # B. mute/unmute events
+                    elif event["type"] == "input_audio_buffer.speech_started":
+                        arduino.write(b"MIMIC VOICE FLASH\n")
+                        print("\n[Detected input...]")
+
                     if event["type"] == "response.created":
                         # arduino part
                         arduino.write(b"LIGHT_ON\n")  
@@ -229,8 +237,9 @@ async def stream_lumie_realtime():
                     elif event["type"] == "response.done":
                        
                         is_responding = False
-                        last_speak_time = time.time() 
-                        print("\n[Unmuted - You can speak now]")
+                        last_speak_time = time.time()
+                        arduino.write(b"RGB:255,255,255\n") 
+                        print("\n[Unmuted - Looking for speech...]")
 
                     # C. audio event
                     if event["type"] in ["response.audio.delta", "response.output_audio.delta"]:
@@ -239,17 +248,14 @@ async def stream_lumie_realtime():
                     # D. user-speech events
                     if event["type"] == "conversation.item.input_audio_transcription.delta":
                         transcript = event.get("delta", "")
-                        print(f"\r👤 You: {transcript}...", end="", flush=True)
-
-                    if event["type"] == "input_audio_buffer.speech_stopped":
-                        print("\r👤 You: (Thinking...)")
+                        print(f"\rYou: {transcript}...", end="", flush=True)
 
                     if event["type"] == "conversation.item.input_audio_transcription.completed":
                         transcript = event.get("transcript", "").strip()
                         if transcript:
-                            print(f"\r👤 You: {transcript}{' ' * 20}") 
+                            print(f"\rYou: {transcript}{' ' * 20}") 
                         else:
-                            print("\r👤 You: (Silence/No words detected)        ")
+                            print("\rYou: (Silence/No words detected)        ")
 
                     # E. bot-response events
                     if event["type"] in ["response.text.delta", "response.output_text.delta"]:
@@ -258,7 +264,7 @@ async def stream_lumie_realtime():
                         
                     # F. ERROR HANDLING
                     if event["type"] == "error":
-                        print(f"\n❌ API Error: {event['error']['message']}")
+                        print(f"\nAPI Error: {event['error']['message']}")
 
 
             # Start both tasks
@@ -275,14 +281,14 @@ if __name__ == "__main__":
     try:
         asyncio.run(stream_lumie_realtime())
     except KeyboardInterrupt:
-        print("\n\n🛑 Stopping Lumie...")
+        print("\n\nStopping Lumie...")
     finally:
         try:
             print("💡 Turning off lights and closing port...")
             arduino.write(b"LIGHT_OFF\n") 
             arduino.flush() 
             arduino.close()
-            print("✅ Done. Catch ya later!")
+            print("Done. Catch ya later!")
         except Exception as e:
             print(f"Error during cleanup: {e}")
 

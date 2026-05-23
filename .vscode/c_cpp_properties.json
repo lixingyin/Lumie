@@ -12,11 +12,12 @@
             ],
             "intelliSenseMode": "gcc-x64",
             "includePath": [
-                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.2/cores/arduino/tinyusb",
-                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.2/cores/arduino/api/deprecated",
-                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.2/cores/arduino/api/deprecated-avr-comp",
-                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.2/cores/arduino",
-                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.2/variants/UNOWIFIR4",
+                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino/tinyusb",
+                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino/api/deprecated",
+                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino/api/deprecated-avr-comp",
+                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino",
+                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.3/variants/UNOWIFIR4",
+                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.3/libraries/WiFiS3/src",
                 "/Users/lixingyin/Library/Arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/arm-none-eabi/include/c++/7.2.1",
                 "/Users/lixingyin/Library/Arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/arm-none-eabi/include/c++/7.2.1/arm-none-eabi",
                 "/Users/lixingyin/Library/Arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/arm-none-eabi/include/c++/7.2.1/backward",
@@ -25,7 +26,7 @@
                 "/Users/lixingyin/Library/Arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/arm-none-eabi/include"
             ],
             "forcedInclude": [
-                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.2/cores/arduino/Arduino.h"
+                "/Users/lixingyin/Library/Arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino/Arduino.h"
             ],
             "cStandard": "c11",
             "cppStandard": "c++17",
@@ -35,7 +36,7 @@
                 "BACKTRACE_SUPPORT",
                 "ARDUINO_UNOR4_WIFI",
                 "ARDUINO=10607",
-                "PROJECT_NAME=\"/Users/lixingyin/Lumie/build/Lumie.ino\"",
+                "PROJECT_NAME=\"/Users/lixingyin/Lumie/build/testmodels.ino\"",
                 "ARDUINO_UNOWIFIR4",
                 "ARDUINO_ARCH_RENESAS_UNO",
                 "ARDUINO_ARCH_RENESAS",
