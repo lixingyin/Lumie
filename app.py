@@ -138,6 +138,50 @@ async def stream_lumie_realtime():
                 except Exception as e:
                     print(f"Mic Error: {e}")
 
+            # monitor sensors
+            async def monitor_sensors(ws):
+                nonlocal is_responding
+                while True:
+                    last_valid_line = None
+                    
+                    while arduino.in_waiting > 0:
+                        try:
+                            last_valid_line = arduino.readline().decode('utf-8').strip()
+                        except:
+                            pass 
+
+                    if last_valid_line and not is_responding:
+                        if last_valid_line.startswith("DIST:"):
+                            try:
+                                dist = int(last_valid_line.split(":")[1])
+                                
+                                if dist < 30:
+                                    print(f"👀 Sensor (Single Trigger): {dist}cm")
+                                    
+                                    await ws.send(json.dumps({
+                                    "type": "conversation.item.create",
+                                    "item": {
+                                        "type": "message",
+                                        "role": "system",
+                                        "content": [{
+                                            "type": "input_text", 
+                                            "text": (
+                                                f"SENSORY INPUT: User has entered your personal space ({dist}cm). "
+                                                "React to this invasion of privacy while staying in character. "
+                                                "Incorporate your current conversation context. If you were just "
+                                                "talking about something else, act like this proximity is a rude interruption."
+                                            )
+                                        }]
+                                    }
+                                }))
+                                    await ws.send(json.dumps({"type": "response.create"}))
+                                    
+                                    await asyncio.sleep(5) 
+                            except:
+                                pass
+
+                    await asyncio.sleep(0.05)
+
            # receive events
             async def receive_events():
                 nonlocal is_responding, last_speak_time
@@ -218,7 +262,7 @@ async def stream_lumie_realtime():
 
 
             # Start both tasks
-            await asyncio.gather(send_audio(), receive_events())
+            await asyncio.gather(send_audio(), receive_events(), monitor_sensors(ws))
 
     finally:
         # Clean up
